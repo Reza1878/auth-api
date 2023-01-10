@@ -1,25 +1,20 @@
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable operator-linebreak */
 class RegisteredUser {
-  constructor({ id, fullname, username }) {
-    this._verifyPayload({ id, username, fullname });
+  constructor(payload) {
+    this._verifyPayload(payload);
+
+    const { id, username, fullname } = payload;
 
     this.id = id;
-    this.fullname = fullname;
     this.username = username;
+    this.fullname = fullname;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   _verifyPayload({ id, username, fullname }) {
-    if (!id || !fullname || !username) {
+    if (!id || !username || !fullname) {
       throw new Error('REGISTERED_USER.NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
-    if (
-      typeof id !== 'string' ||
-      typeof fullname !== 'string' ||
-      typeof username !== 'string'
-    ) {
+    if (typeof id !== 'string' || typeof username !== 'string' || typeof fullname !== 'string') {
       throw new Error('REGISTERED_USER.NOT_MEET_DATA_TYPE_SPECIFICATION');
     }
   }

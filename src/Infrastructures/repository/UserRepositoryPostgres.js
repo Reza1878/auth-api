@@ -1,14 +1,12 @@
-const AuthenticationError = require('../../Commons/exceptions/AuthenticationError');
 const InvariantError = require('../../Commons/exceptions/InvariantError');
 const RegisteredUser = require('../../Domains/users/entities/RegisteredUser');
 const UserRepository = require('../../Domains/users/UserRepository');
 
 class UserRepositoryPostgres extends UserRepository {
-  constructor(pool, idGenerator, passwordHash) {
+  constructor(pool, idGenerator) {
     super();
     this._pool = pool;
     this._idGenerator = idGenerator;
-    this._passwordHash = passwordHash;
   }
 
   async verifyAvailableUsername(username) {
@@ -29,7 +27,7 @@ class UserRepositoryPostgres extends UserRepository {
     const id = `user-${this._idGenerator()}`;
 
     const query = {
-      text: 'INSERT INTO users VAlUES($1, $2, $3, $4) RETURNING id, username, fullname',
+      text: 'INSERT INTO users VALUES($1, $2, $3, $4) RETURNING id, username, fullname',
       values: [id, username, password, fullname],
     };
 
@@ -38,25 +36,19 @@ class UserRepositoryPostgres extends UserRepository {
     return new RegisteredUser({ ...result.rows[0] });
   }
 
-  async verifyUserCredentials({ username, password }) {
+  async getPasswordByUsername(username) {
     const query = {
-      text: 'SELECT id, username, password FROM users WHERE username = $1',
+      text: 'SELECT password FROM users WHERE username = $1',
       values: [username],
     };
-    const result = await this._pool.query(query);
-    const { rows } = result;
 
-    if (!rows[0]) {
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
       throw new InvariantError('username tidak ditemukan');
     }
 
-    const match = await this._passwordHash.compare(password, rows[0].password);
-
-    if (!match) {
-      throw new AuthenticationError('password tidak sama');
-    }
-
-    return rows[0].id;
+    return result.rows[0].password;
   }
 }
 

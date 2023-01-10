@@ -1,52 +1,83 @@
 const Jwt = require('@hapi/jwt');
 const InvariantError = require('../../../Commons/exceptions/InvariantError');
 const JwtTokenManager = require('../JwtTokenManager');
-require('dotenv').config();
 
 describe('JwtTokenManager', () => {
-  describe('generateAccessToken function', () => {
-    it('should generate access token correctly', () => {
-      const spyGenerateAccessToken = jest.spyOn(Jwt.token, 'generate');
-      const jwtTokenManager = new JwtTokenManager(Jwt);
+  describe('createAccessToken function', () => {
+    it('should create accessToken correctly', async () => {
+      // Arrange
+      const payload = {
+        username: 'dicoding',
+      };
+      const mockJwtToken = {
+        generate: jest.fn().mockImplementation(() => 'mock_token'),
+      };
+      const jwtTokenManager = new JwtTokenManager(mockJwtToken);
 
-      const accessToken = jwtTokenManager.generateAccessToken({ userId: 1 });
+      // Action
+      const accessToken = await jwtTokenManager.createAccessToken(payload);
 
-      expect(typeof accessToken).toEqual('string');
-      expect(spyGenerateAccessToken).toBeCalledWith(
-        { userId: 1 },
-        process.env.ACCESS_TOKEN_KEY,
-      );
+      // Assert
+      expect(mockJwtToken.generate).toBeCalledWith(payload, process.env.ACCESS_TOKEN_KEY);
+      expect(accessToken).toEqual('mock_token');
     });
   });
-  describe('generateRefreshToken', () => {
-    const spyGenerateRefreshToken = jest.spyOn(Jwt.token, 'generate');
-    const jwtTokenManager = new JwtTokenManager(Jwt);
 
-    const refreshToken = jwtTokenManager.generateRefreshToken({ userId: 1 });
+  describe('createRefreshToken function', () => {
+    it('should create refreshToken correctly', async () => {
+      // Arrange
+      const payload = {
+        username: 'dicoding',
+      };
+      const mockJwtToken = {
+        generate: jest.fn().mockImplementation(() => 'mock_token'),
+      };
+      const jwtTokenManager = new JwtTokenManager(mockJwtToken);
 
-    expect(typeof refreshToken).toEqual('string');
-    expect(spyGenerateRefreshToken).toBeCalledWith(
-      { userId: 1 },
-      process.env.REFRESH_TOKEN_KEY,
-    );
-  });
-  describe('verifyRefreshToken', () => {
-    it('should throw InvariantError when token is Invalid', () => {
-      const spyDecode = jest.spyOn(Jwt.token, 'decode');
-      const jwtTokenManager = new JwtTokenManager(Jwt);
+      // Action
+      const refreshToken = await jwtTokenManager.createRefreshToken(payload);
 
-      expect(() => {
-        jwtTokenManager.verifyRefreshToken('invalidtoken');
-      }).toThrow(InvariantError);
-      expect(spyDecode).toBeCalledWith('invalidtoken');
+      // Assert
+      expect(mockJwtToken.generate).toBeCalledWith(payload, process.env.REFRESH_TOKEN_KEY);
+      expect(refreshToken).toEqual('mock_token');
     });
-    it('should not throw InvariantError when token is valid', () => {
-      const jwtTokenManager = new JwtTokenManager(Jwt);
+  });
 
-      const refreshToken = jwtTokenManager.generateRefreshToken({ userId: 1 });
-      expect(() => {
-        jwtTokenManager.verifyRefreshToken(refreshToken);
-      }).not.toThrowError();
+  describe('verifyRefreshToken function', () => {
+    it('should throw InvariantError when verification failed', async () => {
+      // Arrange
+      const jwtTokenManager = new JwtTokenManager(Jwt.token);
+      const accessToken = await jwtTokenManager.createAccessToken({ username: 'dicoding' });
+
+      // Action & Assert
+      await expect(jwtTokenManager.verifyRefreshToken(accessToken))
+        .rejects
+        .toThrow(InvariantError);
+    });
+
+    it('should not throw InvariantError when refresh token verified', async () => {
+      // Arrange
+      const jwtTokenManager = new JwtTokenManager(Jwt.token);
+      const refreshToken = await jwtTokenManager.createRefreshToken({ username: 'dicoding' });
+
+      // Action & Assert
+      await expect(jwtTokenManager.verifyRefreshToken(refreshToken))
+        .resolves
+        .not.toThrow(InvariantError);
+    });
+  });
+
+  describe('decodePayload function', () => {
+    it('should decode payload correctly', async () => {
+      // Arrange
+      const jwtTokenManager = new JwtTokenManager(Jwt.token);
+      const accessToken = await jwtTokenManager.createAccessToken({ username: 'dicoding' });
+
+      // Action
+      const { username: expectedUsername } = await jwtTokenManager.decodePayload(accessToken);
+
+      // Action & Assert
+      expect(expectedUsername).toEqual('dicoding');
     });
   });
 });

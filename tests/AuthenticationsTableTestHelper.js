@@ -1,4 +1,4 @@
-// istanbul ignore file
+/* istanbul ignore file */
 const pool = require('../src/Infrastructures/database/postgres/pool');
 
 const AuthenticationsTableTestHelper = {
@@ -13,13 +13,14 @@ const AuthenticationsTableTestHelper = {
 
   async findToken(token) {
     const query = {
-      text: 'SELECT token from authentications WHERE token = $1',
+      text: 'SELECT token FROM authentications WHERE token = $1',
       values: [token],
     };
+
     const result = await pool.query(query);
+
     return result.rows;
   },
-
   async cleanTable() {
     await pool.query('TRUNCATE TABLE authentications');
   },

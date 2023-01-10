@@ -1,29 +1,32 @@
-const TokenManager = require('../../Applications/security/TokenManager');
+const AuthenticationTokenManager = require('../../Applications/security/AuthenticationTokenManager');
 const InvariantError = require('../../Commons/exceptions/InvariantError');
 
-class JwtTokenManager extends TokenManager {
+class JwtTokenManager extends AuthenticationTokenManager {
   constructor(jwt) {
     super();
     this._jwt = jwt;
   }
 
-  generateAccessToken(payload) {
-    return this._jwt.token.generate(payload, process.env.ACCESS_TOKEN_KEY);
+  async createAccessToken(payload) {
+    return this._jwt.generate(payload, process.env.ACCESS_TOKEN_KEY);
   }
 
-  generateRefreshToken(payload) {
-    return this._jwt.token.generate(payload, process.env.REFRESH_TOKEN_KEY);
+  async createRefreshToken(payload) {
+    return this._jwt.generate(payload, process.env.REFRESH_TOKEN_KEY);
   }
 
-  verifyRefreshToken(refreshToken) {
+  async verifyRefreshToken(token) {
     try {
-      const artifacts = this._jwt.token.decode(refreshToken);
-      this._jwt.token.verifySignature(artifacts, process.env.REFRESH_TOKEN_KEY);
-      const { payload } = artifacts.decoded;
-      return payload;
+      const artifacts = this._jwt.decode(token);
+      this._jwt.verify(artifacts, process.env.REFRESH_TOKEN_KEY);
     } catch (error) {
       throw new InvariantError('refresh token tidak valid');
     }
+  }
+
+  async decodePayload(token) {
+    const artifacts = this._jwt.decode(token);
+    return artifacts.decoded.payload;
   }
 }
 

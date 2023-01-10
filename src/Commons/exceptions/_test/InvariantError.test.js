@@ -1,3 +1,4 @@
+const ClientError = require('../ClientError');
 const InvariantError = require('../InvariantError');
 
 describe('InvariantError', () => {

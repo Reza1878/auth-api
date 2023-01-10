@@ -1,4 +1,4 @@
-// istanbul ignore file
+/* istanbul ignore file */
 const { Pool } = require('pg');
 
 const testConfig = {
@@ -9,8 +9,6 @@ const testConfig = {
   database: process.env.PGDATABASE_TEST,
 };
 
-// eslint-disable-next-line operator-linebreak
-const pool =
-  process.env.NODE_ENV === 'test' ? new Pool(testConfig) : new Pool();
+const pool = process.env.NODE_ENV === 'test' ? new Pool(testConfig) : new Pool();
 
 module.exports = pool;
