@@ -28,6 +28,7 @@ const createServer = async (container) => {
       value: 'Hello world!',
     }),
   });
+
   server.ext('onPreResponse', (request, h) => {
     // mendapatkan konteks response dari request
     const { response } = request;
